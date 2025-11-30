@@ -22,3 +22,9 @@ steps:
     archiveType: 'zip'
     archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
     replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'reactjs'
+    publishLocation: 'Container'
