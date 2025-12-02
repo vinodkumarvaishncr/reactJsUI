@@ -23,8 +23,16 @@ steps:
     archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
     replaceExistingArchive: true
 
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'conn5'
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: 'az storage blob upload  --account-name vinodstoragemain ` --container-name container22  --name build.zip   --file build.zip  --overwrite true  --auth-mode login'
+
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(System.DefaultWorkingDirectory)/build.zip'
     ArtifactName: 'reactjs'
     publishLocation: 'Container'
+
