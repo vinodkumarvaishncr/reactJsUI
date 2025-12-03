@@ -25,7 +25,7 @@ steps:
 
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'conn5'
+    azureSubscription: 'conn_new'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: 'az storage blob upload  --account-name vinodstoragemain --container-name container22  --name build.zip   --file build.zip  --overwrite true'
