@@ -26,9 +26,15 @@ steps:
 - task: AzureCLI@2
   inputs:
     azureSubscription: 'conn_new'
-    scriptType: 'bash'
+    scriptType: 'ps'
     scriptLocation: 'inlineScript'
-    inlineScript: 'az storage blob upload  --account-name vinodstoragemain --container-name container22  --name build.zip   --file build.zip  --overwrite true'
+    inlineScript: |
+      echo "Current directory:"
+      pwd
+      
+      echo "Files in working directory:"
+      ls
+      az storage blob upload  --account-name vinodstoragemain --container-name container22  --name build.zip   --file build.zip  --overwrite true
 
 - task: PublishBuildArtifacts@1
   inputs:
