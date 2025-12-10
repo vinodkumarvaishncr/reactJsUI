@@ -1,5 +1,7 @@
 trigger: none
 pool: agent1_pool
+variables:
+- group: r_global_variable   # contains INFRACOST_API_KEY secret variable
 
 steps: 
 - task: PowerShell@2
@@ -61,7 +63,7 @@ steps:
     targetType: 'inline'
     script: |
       $scannerPath = "$(Build.SourcesDirectory)\scanner\sonar-scanner-5.0.1.3006-windows\bin"
-      $SONAR_TOKEN = "squ_1854a75e32f76c50b8889dab9ce1f3eb37c947a4"
+       
             Write-Host "Running SonarQube scan..."
             
             & "$scannerPath\sonar-scanner.bat" `
