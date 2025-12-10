@@ -61,28 +61,20 @@ steps:
     targetType: 'inline'
     script: |
       $scannerPath = "$(Build.SourcesDirectory)\scanner\sonar-scanner-5.0.1.3006-windows\bin"
-
-      if (-not (Test-Path "$scannerPath\sonar-scanner.bat")) {
-        Write-Error "SonarScanner executable missing at: $scannerPath"
-        exit 1
-      }
-
-      $env:SONAR_HOST_URL = "http://localhost:9000"
-      $env:SONAR_LOGIN = "squ_1854a75e32f76c50b8889dab9ce1f3eb37c947a4"   # Use pipeline secret variable
-
-      Write-Host "Running SonarQube scan..."
-
-      & "$scannerPath\sonar-scanner.bat" `
-        -Dsonar.projectKey=reactapp `
-        -Dsonar.sources=. `
-        -Dsonar.exclusions=**/node_modules/**,**/build/** `
-        -Dsonar.host.url=$env:SONAR_HOST_URL `
-        -Dsonar.login=$env:SONAR_LOGIN
-
-      if ($LASTEXITCODE -ne 0) {
-        Write-Error "SonarScanner failed with exit code $LASTEXITCODE"
-        exit $LASTEXITCODE
-      }
+      $SONAR_TOKEN = "squ_1854a75e32f76c50b8889dab9ce1f3eb37c947a4"
+            Write-Host "Running SonarQube scan..."
+            
+            & "$scannerPath\sonar-scanner.bat" `
+              "-Dsonar.projectKey=reactapp" `
+              "-Dsonar.sources=." `
+              "-Dsonar.exclusions=**/node_modules/**,**/build/**" `
+              "-Dsonar.host.url=http://localhost:9000" `
+              "-Dsonar.login=$(SONAR_TOKEN)"
+      
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "SonarScanner failed with exit code $LASTEXITCODE"
+              exit $LASTEXITCODE
+            }
 
     
 
