@@ -16,7 +16,28 @@ steps:
   inputs:
     targetType: 'inline'
     script: 'npm run build'
+    
 - task: PowerShell@2
+  displayName: "Download Sonar scaner"
+  inputs:
+    targetType: 'inline'
+    script: |
+      Invoke-WebRequest `
+              -Uri "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip" `
+              -OutFile "sonar.zip"
+      
+            Expand-Archive sonar.zip -DestinationPath "$(Build.SourcesDirectory)\scanner" -Force
+      
+            $scannerPath = "$(Build.SourcesDirectory)\scanner\sonar-scanner-5.0.1.3006-windows\bin"
+            Write-Host "Scanner path: $scannerPath"
+      
+            # Add to PATH for this pipeline session
+            $env:PATH = "$scannerPath;" + $env:PATH
+      
+            sonar-scanner --version
+    
+- task: PowerShell@2
+  displayName: "run sonar scanner"
   inputs:
     targetType: 'inline'
     script: |
