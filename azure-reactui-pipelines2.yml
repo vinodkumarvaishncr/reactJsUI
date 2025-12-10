@@ -71,8 +71,8 @@ steps:
               "-Dsonar.sources=." `
               "-Dsonar.exclusions=**/node_modules/**,**/build/**" `
               "-Dsonar.host.url=http://localhost:9000" `
-              "-Dsonar.login=$(SONAR_TOKEN)"
-      
+               "-Dsonar.login=$env:SONAR_TOKEN"
+            Write-Host "SONAR_TOKEN exists? " ($env:SONAR_TOKEN -ne $null)
             if ($LASTEXITCODE -ne 0) {
               Write-Error "SonarScanner failed with exit code $LASTEXITCODE"
               exit $LASTEXITCODE
