@@ -1,0 +1,56 @@
+trigger: none
+pool: agent1_pool
+
+steps: 
+- task: PowerShell@2
+  displayName: "npm install"
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Write your PowerShell commands here.
+      
+      npm install
+
+- task: PowerShell@2
+  displayName: "npm run build"
+  inputs:
+    targetType: 'inline'
+    script: 'npm run build'
+
+- task: PowerShell@2
+  displayName: "Run Semgrep Security Scan"
+  inputs:
+    targetType: 'inline'
+    script: |
+      pip install semgrep
+      semgrep --config=p/ci
+
+- task: ArchiveFiles@2
+  displayName: "ArchiveFiles"
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
+    replaceExistingArchive: true
+
+- task: AzureCLI@2
+  displayName: "push in storage account"
+  inputs:
+    azureSubscription: 'conn_new'
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Current directory:"
+      pwd
+      
+      echo "Files in working directory:"
+      ls
+      az storage blob upload  --account-name vinodstoragemaina --container-name container22  --name build.zip   --file build.zip  --overwrite true
+
+- task: PublishBuildArtifacts@1
+  displayName: "PublishBuildArtifacts"
+  inputs:
+    PathtoPublish: '$(Build.SourcesDirectory)/build.zip'
+    ArtifactName: 'reactjs'
+    publishLocation: 'Container'
