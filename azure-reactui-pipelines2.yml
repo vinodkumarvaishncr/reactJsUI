@@ -25,11 +25,17 @@ steps:
       python -m pip install --upgrade pip
       pip install semgrep
       
-      # ADD SCRIPTS FOLDER TO PATH
-      $env:Path += ";C:\Users\Vinod Kumar\AppData\Roaming\Python\Python314\Scripts"
+       # ADD SCRIPTS FOLDER TO PATH
+        $env:Path += ";C:\Users\Vinod Kumar\AppData\Roaming\Python\Python314\Scripts"
       
-        semgrep --version
-        semgrep --config=p/ci
+        # 🔥 FIX: Force UTF-8 output to avoid UnicodeEncodeError
+            [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+            $env:PYTHONIOENCODING = "utf-8"
+            $env:LC_ALL = "C.UTF-8"
+            $env:LANG = "C.UTF-8"
+      
+            semgrep --version
+            semgrep --config=p/ci --error
 
 - task: ArchiveFiles@2
   displayName: "ArchiveFiles"
