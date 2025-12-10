@@ -16,26 +16,18 @@ steps:
   inputs:
     targetType: 'inline'
     script: 'npm run build'
-
 - task: PowerShell@2
-  displayName: "Run Semgrep Security Scan"
   inputs:
     targetType: 'inline'
     script: |
-      python -m pip install --upgrade pip
-      pip install semgrep
-      
-       # ADD SCRIPTS FOLDER TO PATH
-        $env:Path += ";C:\Users\Vinod Kumar\AppData\Roaming\Python\Python314\Scripts"
-      
-        # 🔥 FIX: Force UTF-8 output to avoid UnicodeEncodeError
-            [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-            $env:PYTHONIOENCODING = "utf-8"
-            $env:LC_ALL = "C.UTF-8"
-            $env:LANG = "C.UTF-8"
-      
-            semgrep --version
-            semgrep --config=p/ci --error
+      $env:SONAR_HOST_URL = "http://localhost:9000"
+            $env:SONAR_LOGIN = "squ_1854a75e32f76c50b8889dab9ce1f3eb37c947a4"   # Add SONAR_TOKEN in pipeline variables as secret
+            sonar-scanner `
+              -Dsonar.projectKey=reactapp `
+              -Dsonar.sources=. `
+              -Dsonar.exclusions=**/node_modules/**,**/build/** `
+              -Dsonar.host.url=$env:SONAR_HOST_URL `
+              -Dsonar.login=$env:SONAR_LOGIN
 
 - task: ArchiveFiles@2
   displayName: "ArchiveFiles"
