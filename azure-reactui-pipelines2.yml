@@ -22,8 +22,14 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      python -m pip install --upgrade pip
       pip install semgrep
-      semgrep --config=p/ci
+      
+      # ADD SCRIPTS FOLDER TO PATH
+      $env:Path += ";C:\Users\Vinod Kumar\AppData\Roaming\Python\Python314\Scripts"
+      
+        semgrep --version
+        semgrep --config=p/ci
 
 - task: ArchiveFiles@2
   displayName: "ArchiveFiles"
