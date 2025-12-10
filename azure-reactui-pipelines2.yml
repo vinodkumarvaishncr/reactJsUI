@@ -64,7 +64,7 @@ steps:
     script: |
       $scannerPath = "$(Build.SourcesDirectory)\scanner\sonar-scanner-5.0.1.3006-windows\bin"
        
-            Write-Host "Running SonarQube scan..."
+            
             
             & "$scannerPath\sonar-scanner.bat" `
               "-Dsonar.projectKey=reactapp" `
@@ -72,6 +72,7 @@ steps:
               "-Dsonar.exclusions=**/node_modules/**,**/build/**" `
               "-Dsonar.host.url=http://localhost:9000" `
                "-Dsonar.login=$env:SONAR_TOKEN"
+            Write-Host " : Running SonarQube scan with token: SONAR_TOKEN ..."
             Write-Host "SONAR_TOKEN exists? " ($env:SONAR_TOKEN -ne $null)
             if ($LASTEXITCODE -ne 0) {
               Write-Error "SonarScanner failed with exit code $LASTEXITCODE"
