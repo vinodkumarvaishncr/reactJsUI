@@ -17,38 +17,74 @@ steps:
     targetType: 'inline'
     script: 'npm run build'
     
+# --- Download SonarScanner ---
 - task: PowerShell@2
-  displayName: "Download Sonar scaner"
+  displayName: "Download SonarScanner"
   inputs:
     targetType: 'inline'
     script: |
-      Invoke-WebRequest `
-              -Uri "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip" `
-              -OutFile "sonar.zip"
-      
-            Expand-Archive sonar.zip -DestinationPath "$(Build.SourcesDirectory)\scanner" -Force
-      
-            $scannerPath = "$(Build.SourcesDirectory)\scanner\sonar-scanner-5.0.1.3006-windows\bin"
-            Write-Host "Scanner path: $scannerPath"
-      
-            # Add to PATH for this pipeline session
-            $env:PATH = "$scannerPath;" + $env:PATH
-      
-            sonar-scanner --version
-    
+      Write-Host "Downloading SonarScanner..."
+
+      $zipUrl = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
+      $zipPath = "$(Build.SourcesDirectory)\sonar.zip"
+      $extractPath = "$(Build.SourcesDirectory)\scanner"
+
+      # Download scanner zip
+      Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
+
+      # Extract
+      if (Test-Path $extractPath) {
+        Remove-Item $extractPath -Recurse -Force
+      }
+      Expand-Archive -LiteralPath $zipPath -DestinationPath $extractPath -Force
+
+      # Locate bin folder
+      $scannerFolder = Get-ChildItem -Path $extractPath -Directory | Select-Object -First 1
+      $scannerPath   = Join-Path $scannerFolder.FullName "bin"
+
+      Write-Host "Scanner path is: $scannerPath"
+
+      # Add to PATH for this job
+      $env:PATH = "$scannerPath;$env:PATH"
+
+      # Test scanner
+      & "$scannerPath\sonar-scanner.bat" --version
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "SonarScanner not found or failed to run."
+        exit 1
+      }
+
+# --- Run SonarScanner ---
 - task: PowerShell@2
-  displayName: "run sonar scanner"
+  displayName: "Run SonarQube Scan"
   inputs:
     targetType: 'inline'
     script: |
+      $scannerPath = "$(Build.SourcesDirectory)\scanner\sonar-scanner-5.0.1.3006-windows\bin"
+
+      if (-not (Test-Path "$scannerPath\sonar-scanner.bat")) {
+        Write-Error "SonarScanner executable missing at: $scannerPath"
+        exit 1
+      }
+
       $env:SONAR_HOST_URL = "http://localhost:9000"
-            $env:SONAR_LOGIN = "squ_1854a75e32f76c50b8889dab9ce1f3eb37c947a4"   # Add SONAR_TOKEN in pipeline variables as secret
-            sonar-scanner `
-              -Dsonar.projectKey=reactapp `
-              -Dsonar.sources=. `
-              -Dsonar.exclusions=**/node_modules/**,**/build/** `
-              -Dsonar.host.url=$env:SONAR_HOST_URL `
-              -Dsonar.login=$env:SONAR_LOGIN
+      $env:SONAR_LOGIN = "squ_1854a75e32f76c50b8889dab9ce1f3eb37c947a4"   # Use pipeline secret variable
+
+      Write-Host "Running SonarQube scan..."
+
+      & "$scannerPath\sonar-scanner.bat" `
+        -Dsonar.projectKey=reactapp `
+        -Dsonar.sources=. `
+        -Dsonar.exclusions=**/node_modules/**,**/build/** `
+        -Dsonar.host.url=$env:SONAR_HOST_URL `
+        -Dsonar.login=$env:SONAR_LOGIN
+
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "SonarScanner failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+      }
+
+    
 
 - task: ArchiveFiles@2
   displayName: "ArchiveFiles"
