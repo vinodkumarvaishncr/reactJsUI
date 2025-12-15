@@ -79,7 +79,12 @@ steps:
               exit $LASTEXITCODE
             }
 
-    
+- task: PowerShell@2
+  displayName: "terrascan"
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: 'terrascan scan'
 
 - task: ArchiveFiles@2
   displayName: "ArchiveFiles"
