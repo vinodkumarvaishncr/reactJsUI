@@ -1,0 +1,117 @@
+trigger: none
+pool: agent1_pool
+variables:
+- group: r_global_variable   # contains INFRACOST_API_KEY secret variable
+
+steps: 
+- task: PowerShell@2
+  displayName: "npm install"
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Write your PowerShell commands here.
+      
+      npm install
+
+- task: PowerShell@2
+  displayName: "npm run build"
+  inputs:
+    targetType: 'inline'
+    script: 'npm run build'
+    
+# --- Download SonarScanner ---
+- task: PowerShell@2
+  displayName: "Download SonarScanner"
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Downloading SonarScanner..."
+
+      $zipUrl = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
+      $zipPath = "$(Build.SourcesDirectory)\sonar.zip"
+      $extractPath = "$(Build.SourcesDirectory)\scanner"
+
+      # Download scanner zip
+      Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
+
+      # Extract
+      if (Test-Path $extractPath) {
+        Remove-Item $extractPath -Recurse -Force
+      }
+      Expand-Archive -LiteralPath $zipPath -DestinationPath $extractPath -Force
+
+      # Locate bin folder
+      $scannerFolder = Get-ChildItem -Path $extractPath -Directory | Select-Object -First 1
+      $scannerPath   = Join-Path $scannerFolder.FullName "bin"
+
+      Write-Host "Scanner path is: $scannerPath"
+
+      # Add to PATH for this job
+      $env:PATH = "$scannerPath;$env:PATH"
+
+      # Test scanner
+      & "$scannerPath\sonar-scanner.bat" --version
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "SonarScanner not found or failed to run."
+        exit 1
+      }
+
+# --- Run SonarScanner ---
+- task: PowerShell@2
+  displayName: "Run SonarQube Scan"
+  inputs:
+    targetType: 'inline'
+    script: |
+      $scannerPath = "$(Build.SourcesDirectory)\scanner\sonar-scanner-5.0.1.3006-windows\bin"
+       
+            
+            
+            & "$scannerPath\sonar-scanner.bat" `
+              "-Dsonar.projectKey=reactapp" `
+              "-Dsonar.sources=." `
+              "-Dsonar.exclusions=**/node_modules/**,**/build/**" `
+              "-Dsonar.host.url=http://localhost:9000" `
+               "-Dsonar.login=$env:SONAR_TOKEN"
+            Write-Host " : Running SonarQube scan with token: SONAR_TOKEN ..."
+            Write-Host "SONAR_TOKEN exists? " ($env:SONAR_TOKEN -ne $null)
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "SonarScanner failed with exit code $LASTEXITCODE"
+              exit $LASTEXITCODE
+            }
+
+- task: PowerShell@2
+  displayName: "terrascan"
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: 'terrascan scan'
+
+- task: ArchiveFiles@2
+  displayName: "ArchiveFiles"
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
+    replaceExistingArchive: true
+
+- task: AzureCLI@2
+  displayName: "push in storage account"
+  inputs:
+    azureSubscription: 'azure_conn'
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Current directory:"
+      pwd
+      
+      echo "Files in working directory:"
+      ls
+      az storage blob upload  --account-name vinodstoragemaina --container-name container22  --name build.zip   --file build.zip  --overwrite true
+
+- task: PublishBuildArtifacts@1
+  displayName: "PublishBuildArtifacts"
+  inputs:
+    PathtoPublish: '$(Build.SourcesDirectory)/build.zip'
+    ArtifactName: 'reactjs'
+    publishLocation: 'Container'
