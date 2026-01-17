@@ -15,7 +15,7 @@ stages:
   displayName: Build WAR
   jobs:
   - job: MavenBuild
-    pool: agent1_pool
+
 
     steps:
     - checkout: self
