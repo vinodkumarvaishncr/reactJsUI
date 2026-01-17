@@ -109,6 +109,7 @@ stages:
 
 - stage: CDD
   displayName: "Deploy to Dev"
+  dependsOn: BuildAndPackage
   jobs:
     - job: "cdpart"
       steps:
