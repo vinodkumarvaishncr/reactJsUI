@@ -1,6 +1,8 @@
 trigger:
 - none
 
+pool: agent1_pool
+
 variables:
   TOMCAT_HOME: /opt/tomcat
   WAR_NAME: JavaLoginShowcase.war
