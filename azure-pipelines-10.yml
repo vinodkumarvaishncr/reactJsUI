@@ -92,13 +92,25 @@ stages:
       displayName: Install Dependencies
       inputs:
         targetType: 'inline'
-        script: 'npm install'
+        script: |
+          export CI=false
+          export GENERATE_SOURCEMAP=false
+          npm install
 
     - task: PowerShell@2
       displayName: Build Application
       inputs:
         targetType: 'inline'
-        script: 'npm run build'
+        script: |
+          export CI=false
+          export GENERATE_SOURCEMAP=false
+          npm run build
+
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        path: 'node_modules'
+        restoreKeys: 'npm | "$(Agent.OS)"'
 
     - task: PublishPipelineArtifact@1
       displayName: Publish Build Artifact
