@@ -7,38 +7,8 @@ variables:
   TOMCAT_HOME: /opt/tomcat
   WAR_NAME: JavaLoginShowcase.war
 
-stages:
-# =========================
-# CI STAGE – BUILD
-# =========================
-- stage: Build
+steps:
+- script: |
+    mvn -version
+    mvn clean package
   displayName: Build WAR
-  jobs:
-  - job: MavenBuild
-
-
-    steps:
-    - checkout: self
-
-    - task: JavaToolInstaller@0
-      inputs:
-        versionSpec: '17'
-        jdkArchitectureOption: x64
-        jdkSourceOption: PreInstalled
-
-    - task: Maven@3
-      displayName: Maven Clean Package
-      inputs:
-        mavenPomFile: pom.xml
-        goals: clean package
-        options: -DskipTests
-        javaHomeOption: JDKVersion
-        jdkVersionOption: 1.17
-        publishJUnitResults: false
-
-    - task: PublishBuildArtifacts@1
-      displayName: Publish WAR Artifact
-      inputs:
-        PathtoPublish: target
-        ArtifactName: drop
-        publishLocation: Container
