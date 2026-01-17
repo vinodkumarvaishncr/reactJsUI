@@ -93,8 +93,8 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          export CI=false
-          export GENERATE_SOURCEMAP=false
+          $env:CI="false"
+          $env:GENERATE_SOURCEMAP="false"
           npm install
 
     - task: PowerShell@2
@@ -102,8 +102,8 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          export CI=false
-          export GENERATE_SOURCEMAP=false
+          $env:CI="false"
+          $env:GENERATE_SOURCEMAP="false"
           npm run build
 
     - task: Cache@2
