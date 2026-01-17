@@ -107,6 +107,34 @@ stages:
         artifact: 'todo-ui'
         publishLocation: 'pipeline'
 
+- stage: CDD
+  displayName: "Deploy to Dev"
+  jobs:
+    - job: "cdpart"
+      steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'current'
+          artifactName: 'todo-ui'
+          targetPath: '$(System.DefaultWorkingDirectory)/build'
+
+      - task: CopyFilesOverSSH@0
+        inputs:
+          sshEndpoint: 'dev-vm'
+          sourceFolder: '$(System.DefaultWorkingDirectory)/build'
+          contents: '**'
+          targetFolder: '/home/vinodadmin/'
+          cleanTargetFolder: true
+          readyTimeout: '20000'
+
+      - task: SSH@0
+        inputs:
+          sshEndpoint: 'dev-vm'
+          runOptions: 'commands'
+          commands: 'sudo cp -r /home/devopsadmin/* /var/www/html'
+          readyTimeout: '20000'
+
+
 # - stage: deployToDev
 #   condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
 #   displayName: Deploy To Dev VM
